@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CPU Benchmark</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    button {
+      padding: 12px 20px;
+      font-size: 1rem;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    #results {
+      margin-top: 20px;
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔥 CPU Benchmark</h1>
+  <p>Sorting <strong>1,000,000</strong> numbers with bubble sort</p>
+  <button onclick="startBenchmark()">Start Benchmark</button>
+
+  <div id="results"></div>
+
+  <script>
+    function generateRandomArray(size) {
+      const arr = new Array(size);
+      for (let i = 0; i < size; i++) {
+        arr[i] = Math.floor(Math.random() * size);
+      }
+      return arr;
+    }
+
+    function bubbleSort(arr) {
+      const n = arr.length;
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+          if (arr[j] > arr[j + 1]) {
+            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+          }
+        }
+      }
+      return arr;
+    }
+
+    function startBenchmark() {
+      const SIZE = 100000;
+      const output = document.getElementById("results");
+      output.innerText = "Generating 1,000,000 numbers...\n(This may take a while!)";
+
+      setTimeout(() => {
+        const array = generateRandomArray(SIZE);
+        output.innerText += "\nStarting benchmark...\n";
+
+        const start = performance.now();
+        bubbleSort(array);
+        const end = performance.now();
+
+        const timeTaken = (end - start).toFixed(2);
+        const score = Math.round((SIZE * SIZE) / timeTaken);
+
+        output.innerText = `✅ Done!\n⏱ Time taken: ${timeTaken} ms\n💻 CPU Score: ${score} CineScore\n\n`;
+        output.innerText += "Showing first 100 sorted numbers only:\n" + array.slice(0, 100).join(", ");
+      }, 100);
+    }
+  </script>
+</body>
+</html>
