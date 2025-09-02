@@ -1,80 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CPU Benchmark</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> CPU Benchmark</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Orbitron', sans-serif;
+      background-color: #ffff;
+      color: #00ffe7;
       text-align: center;
-      padding: 20px;
-      background: #f4f4f4;
+      padding: 40px;
+    }
+    .container {
+      background: black;
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 800px;
+      margin: auto;
+      box-shadow: 0 0 25px rgba(0,255,255,0.5);
+    }
+    h1 {
+      font-size: 2.2rem;
+      text-shadow: 0 0 15px #00ffe7, 0 0 25px #00e1ff;
+    }
+    p {
+      opacity: 0.8;
     }
     button {
-      padding: 12px 20px;
+      background: rgba(0, 255, 255, 0.837);
+      border: none;
+      padding: 14px 28px;
+      border-radius: 12px;
       font-size: 1rem;
-      margin-top: 20px;
+      font-family: 'Orbitron', sans-serif;
+      color: black;
+      font-weight: bold;
       cursor: pointer;
+      margin: 15px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 20px #00ffe7;
     }
     #results {
       margin-top: 20px;
+      font-family: monospace;
+      text-align: left;
       white-space: pre-wrap;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      max-height: 60vh;
+      background: rgba(0,255,255,0.05);
+      padding: 20px;
+      border-radius: 12px;
+      max-height: 50vh;
       overflow-y: auto;
+      border: 1px solid rgba(0,255,255,0.2);
     }
+    .rating {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .slow { color: #ff4b5c; text-shadow: 0 0 10px #ff4b5c; }
+    .medium { color: #ffa600; text-shadow: 0 0 10px #ffa600; }
+    .fast { color: #00ff88; text-shadow: 0 0 10px #00ff88; }
+    .superfast { color: #00eaff; text-shadow: 0 0 10px #00eaff; }
   </style>
 </head>
 <body>
-  <h1>🔥 CPU Benchmark</h1>
-  <p>Sorting <strong>1,000,000</strong> numbers with bubble sort</p>
-  <button onclick="startBenchmark()">Start Benchmark</button>
-
-  <div id="results"></div>
+  <div class="container">
+    <h1>⚡ Cyber CPU Benchmark</h1>
+    <p>Benchmarking by finding all prime numbers up to <strong>5,000,000</strong></p>
+    <button onclick="startBenchmark()">Run Benchmark</button>
+    <button onclick="downloadReport()" id="downloadBtn" disabled>📥 Download Report (PDF)</button>
+    <div id="results"></div>
+  </div>
 
   <script>
-    function generateRandomArray(size) {
-      const arr = new Array(size);
-      for (let i = 0; i < size; i++) {
-        arr[i] = Math.floor(Math.random() * size);
-      }
-      return arr;
-    }
+    let benchmarkData = null;
 
-    function bubbleSort(arr) {
-      const n = arr.length;
-      for (let i = 0; i < n - 1; i++) {
-        for (let j = 0; j < n - i - 1; j++) {
-          if (arr[j] > arr[j + 1]) {
-            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+    function sieveOfEratosthenes(limit) {
+      const sieve = new Array(limit + 1).fill(true);
+      sieve[0] = sieve[1] = false;
+      for (let i = 2; i * i <= limit; i++) {
+        if (sieve[i]) {
+          for (let j = i * i; j <= limit; j += i) {
+            sieve[j] = false;
           }
         }
       }
-      return arr;
+      return sieve.map((isPrime, idx) => isPrime ? idx : null).filter(x => x !== null);
+    }
+
+    function getSpeedCategory(score) {
+      if (score < 5000) return { label: "🐢 Slow", cls: "slow" };
+      if (score < 20000) return { label: "⚖️ Medium", cls: "medium" };
+      if (score < 50000) return { label: "⚡ Fast", cls: "fast" };
+      return { label: "🚀 Superfast", cls: "superfast" };
     }
 
     function startBenchmark() {
-      const SIZE = 100000;
+      const LIMIT = 5000000;
       const output = document.getElementById("results");
-      output.innerText = "Generating 1,000,000 numbers...\n(This may take a while!)";
+      document.getElementById("downloadBtn").disabled = true;
+      output.innerText = "⏳ Running prime number benchmark...\n";
 
       setTimeout(() => {
-        const array = generateRandomArray(SIZE);
-        output.innerText += "\nStarting benchmark...\n";
-
         const start = performance.now();
-        bubbleSort(array);
+        const primes = sieveOfEratosthenes(LIMIT);
         const end = performance.now();
 
         const timeTaken = (end - start).toFixed(2);
-        const score = Math.round((SIZE * SIZE) / timeTaken);
+        const score = Math.round(LIMIT / timeTaken);
+        const category = getSpeedCategory(score);
 
-        output.innerText = `✅ Done!\n⏱ Time taken: ${timeTaken} ms\n💻 CPU Score: ${score} CineScore\n\n`;
-        output.innerText += "Showing first 100 sorted numbers only:\n" + array.slice(0, 100).join(", ");
-      }, 100);
+        benchmarkData = {
+          timeTaken,
+          score,
+          category: category.label,
+          primeCount: primes.length,
+          firstPrimes: primes.slice(0,20),
+          lastPrime: primes[primes.length-1],
+          date: new Date().toLocaleString()
+        };
+
+        output.innerHTML = `✅ Completed!\n⏱ Time taken: ${timeTaken} ms\n💻 CPU Score: ${score} MathOps/sec\n`;
+        output.innerHTML += `<div class="rating ${category.cls}">🏎️ Performance: ${category.label}</div>\n\n`;
+        output.innerHTML += `Found ${primes.length} primes.\nFirst 20 primes: ${primes.slice(0,20).join(", ")}\n`;
+        output.innerHTML += `Last prime found: ${primes[primes.length-1]}`;
+
+        document.getElementById("downloadBtn").disabled = false;
+      }, 200);
+    }
+
+    function downloadReport() {
+      if (!benchmarkData) return;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Title
+      doc.setFont("courier", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(0, 255, 200);
+      doc.text("⚡ Cyber CPU Benchmark Report", 20, 20);
+
+      // Info
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text(`Date: ${benchmarkData.date}`, 20, 35);
+      doc.text("Test: Prime Number Benchmark (up to 5,000,000)", 20, 45);
+
+      // Results
+      doc.setFont("courier", "normal");
+      doc.setTextColor(30, 30, 30);
+      doc.text(`⏱ Time Taken: ${benchmarkData.timeTaken} ms`, 20, 60);
+      doc.text(`💻 CPU Score: ${benchmarkData.score} MathOps/sec`, 20, 70);
+      doc.text(`🏎️ Performance: ${benchmarkData.category}`, 20, 80);
+      doc.text(`🔢 Total Primes Found: ${benchmarkData.primeCount}`, 20, 90);
+
+      doc.text("First 20 primes:", 20, 110);
+      doc.text(benchmarkData.firstPrimes.join(", "), 20, 120, { maxWidth: 170 });
+
+      doc.text(`Last Prime Found: ${benchmarkData.lastPrime}`, 20, 140);
+
+      // Save
+      doc.save("CPU_Benchmark_Report.pdf");
     }
   </script>
 </body>
